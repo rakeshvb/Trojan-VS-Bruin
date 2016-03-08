@@ -145,7 +145,7 @@ def convertRuleToDict(rule):
             name = premise[0:premise.index('(')]
             variables = premise[premise.index('(')+1:premise.index(')')]
             variables = variables.split(',')
-            for l in range (0,len(variables)):
+            for op in range (0,len(variables)):
                 variables[l] = variables[l].strip()
             varCount = len(variables)
 
@@ -275,14 +275,80 @@ def Back_Chain_Ask(KB, query):
     return Back_Chain_OR(KB, query, {})
 
 def Back_Chain_OR(KB, goal, theta):
-    za= str('Ask: '+goal)
+    
+    
+    ox = goal.find('(')
+    cx = goal.find(')')
+
+    variables = goal[ox+1:cx]
+    variables = variables.split(',')
+    goalx = goal[0:ox]
+
+
+
+    s = ''
+    for op in range (0,len(variables)):
+        variables[op] = variables[op].strip()
+        if ord(str(variables[op][0])) >= 97:
+            dd=variables[op]
+            if theta.has_key(dd):
+                sub = str(theta[variables[op]])
+
+                while ord(sub[0]) >= 97 and theta.has_key(sub):
+                    sub = str(theta[sub])
+
+                s = s + sub + ', '
+
+            else:
+                s = s + '_, '
+
+        else:
+            s = s + variables[op] + ', '
+
+    s = '(' + s[0:len(s)-2] + ')'
+    goalx = goalx + s
+    za= str('Ask: '+goalx)
     o.write(za)
     o.write('\n')
-    print('Ask: '+goal)
+    print('Ask: '+goalx)
+
+#    name = goal[0:goal.index('(')]
+#    variables = goal[goal.index('(')+1:goal.index(')')]
+#    xz=variables
+#    variables = variables.split(',')
+#    for op in range (0,len(variables)):
+#        variables[op] = variables[op].strip()
+#        if variables[op][0].islower():
+#            variables[op]='_'
+#    #print variables
+#    s=''
+#    varCount = len(variables)
+#    for ii in range(varCount):
+#        if ii == varCount-1:
+#            s=s+variables[ii]
+#        else:
+#            s=s+variables[ii]+', '
+#    #print s
+#    #print goal.replace(xz,s)
+#    
+#    
+#    
+#    za= str('Ask: '+goal.replace(xz,s))
+#    o.write(za)
+#    o.write('\n')
+##    wq=goal.split('(')
+##    print wq[1][0]
+#    print('Ask: '+goal.replace(xz,s))
     #flag=False
+    ij=0
     for rule in KB.fetch_all_Rules(goal):
+        ij+=1
+        ij1=len(KB.fetch_all_Rules(goal))
+#        print ij1
+#        print ij
         lhs, rhs = splitRule(rule)
         uni=Unify(rhs, goal, theta)
+        flag=False
         for thetaOne in Back_Chain_And(KB, lhs, uni, rhs):
             #print('Ask: '+lhs)
 #            zaaaa= str('True: '+goal)
@@ -297,8 +363,22 @@ def Back_Chain_OR(KB, goal, theta):
            # print "______"
             #print rhs
             #print "______"
-            #falg=True
+            flag=True
             yield thetaOne
+        if flag == False:
+            if ij == ij1:
+                zaaaa= str('False: '+goalx)
+                o.write(zaaaa)
+                o.write('\n')
+                print str('False: '+goalx)
+            else:
+                zaaaaa= str('Ask: '+goalx)
+                o.write(zaaaaa)
+                o.write('\n')
+                print str('Ask: '+goalx)
+#                    strPrintReady = Expr.generatePrintReadyStatement(goal)
+#                    # print "False: %s" %(strPrintReady)
+#                    fileOutput.write("Ask: %s\n" %(strPrintReady))
 #        if flag==False:
 #            print str('False: '+goal)
 #            else:
@@ -308,35 +388,7 @@ def Back_Chain_OR(KB, goal, theta):
 #                print str('False: '+rhs)
 
 
-'''
-def fol_bc_or(KB, goal, theta):
-	print "Ask: %s" %(goal)
-	rules = KB.fetch_rules_for_goal(goal)
-		for rule in rules:
-	
-		stdExpr = standardize_variables(rule)
-		lhs, rhs = parse_definite_clause(standardize_variables(rule))
-	
-		thetaBeforeAnd = Unify(rhs, goal, theta)
-	
-		thetasBeforeAND = fol_bc_and(KB, lhs, thetaBeforeAnd, goal)
-		hasItGotSomeValues = False
-		for theta1 in thetasBeforeAND:
-	
-			hasItGotSomeValues = True
-			goal = subst(theta, goal)
-			strGoal = "%s" %(goal)
-			if strGoal == strQueryExpr:
-	
-				yield theta1
-				raise StopIteration
-	
-			yield theta1
-		if hasItGotSomeValues == False:
-			goal = subst(theta, goal)
-	
-			print "False: %s" %(goal)
-'''
+
 def Back_Chain_And(KB, goals, theta, rhs):
     #print goals
     if theta == 'failure':
@@ -347,11 +399,61 @@ def Back_Chain_And(KB, goals, theta, rhs):
         #print('Ask: '+rhs)
         return
     elif len(goals) == 0:
-        zaaa= str('True: '+rhs)
+        
+        
+        ox = rhs.find('(')
+        cx = rhs.find(')')
+
+        variables = rhs[ox+1:cx]
+        variables = variables.split(',')
+        goalx = rhs[0:ox]
+
+        s = ''
+        for op in range (0,len(variables)):
+            variables[op] = variables[op].strip()
+            if ord(str(variables[op][0])) >= 97:
+
+                sub = str(theta[variables[op]])
+
+                while ord(sub[0]) >= 97:
+                    sub = str(theta[sub])
+
+                s = s + sub+', '
+            else:
+                s = s + variables[op] + ', '
+
+        s = '(' + s[0:len(s)-2] + ')'
+        goalx = goalx + s
+        #print('True: '+goalx)
+        
+        
+        
+        '''
+        name = goal[0:goal.index('(')]
+    variables = goal[goal.index('(')+1:goal.index(')')]
+    xz=variables
+    variables = variables.split(',')
+    for op in range (0,len(variables)):
+        variables[op] = variables[op].strip()
+        if variables[op][0].islower():
+            variables[op]='_'
+    #print variables
+    s=''
+    varCount = len(variables)
+    for ii in range(varCount):
+        if ii == varCount-1:
+            s=s+variables[ii]
+        else:
+            s=s+variables[ii]+', '
+    #print s
+    #print goal.replace(xz,s)
+        '''
+        #rhs=substitution(theta, rhs)
+        zaaa= str('True: '+goalx)
         o.write(zaaa)
         o.write('\n')
         #print theta
-        print str('True: '+rhs)
+        print str('True: '+goalx)
         yield theta
     else:
         first, rest = FR(goals)
@@ -428,13 +530,15 @@ finala = True
 for query in queryList:
 
     x = Back_Chain_Ask(KB ,query)
-
+    
     try:
         substitutionList = next(x)
         finala = True
-        print substitutionList
+        
+       # print substitutionList
     except StopIteration:
         finala = False
+        break
 
 if finala:
     zax='True'
